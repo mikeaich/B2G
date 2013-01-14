@@ -52,11 +52,17 @@ function configure_device() {
     return $?
 }
 
+function have_command() {
+    type "$1" &> /dev/null ;
+}
+
 . setup.sh &&
 configure_device &&
 time nice -n19 make $MAKE_FLAGS $@
 
 ret=$?
+notify_cmd=notify-send
+notify_on=${B2G_BUILD_NOTIFY:0}
 echo -ne \\a
 if [ $ret -ne 0 ]; then
 	echo
@@ -64,6 +70,9 @@ if [ $ret -ne 0 ]; then
 	echo
 	echo Build with \|./build.sh -j1\| for better messages
 	echo If all else fails, use \|rm -rf objdir-gecko\| to clobber gecko and \|rm -rf out\| to clobber everything else.
+	if [ $notify_on -ne 0 ] && have_command $notify_cmd ; then
+		$notify_cmd "Build failed  :(" $@
+	fi
 else
 	if echo $DEVICE | grep generic > /dev/null ; then
 		echo Run \|./run-emulator.sh\| to start the emulator
@@ -77,6 +86,9 @@ else
 		echo Run \|./flash.sh\| to flash all partitions of your device
 		;;
 	esac
+	if [ $notify_on -ne 0 ] && have_command $notify_cmd ; then
+		$notify_cmd "Build succeeded \\o/" $@
+	fi
 	exit 0
 fi
 
