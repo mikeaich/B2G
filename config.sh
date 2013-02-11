@@ -29,18 +29,18 @@ case `uname` in
 esac
 
 GITREPO=${GITREPO:-"git://github.com/mozilla-b2g/b2g-manifest"}
-BRANCH=${BRANCH:-nightly}
+BRANCH=${BRANCH:-v1-train}
 
 GIT_TEMP_REPO="tmp_manifest_repo"
 if [ -n "$2" ]; then
 	GITREPO=$GIT_TEMP_REPO
-	GITBRANCH="master"
 	rm -rf $GITREPO &&
 	git init $GITREPO &&
 	cp $2 $GITREPO/$1.xml &&
 	cd $GITREPO &&
 	git add $1.xml &&
 	git commit -m "manifest" &&
+	git branch -m $BRANCH &&
 	cd ..
 fi
 
