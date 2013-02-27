@@ -56,6 +56,7 @@ function have_command() {
     type "$1" &> /dev/null ;
 }
 
+unset CDPATH
 . setup.sh &&
 if [ -f patches/patch.sh ] ; then
     . patches/patch.sh
