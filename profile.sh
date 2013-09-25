@@ -99,10 +99,12 @@ get_comms() {
     return
   fi
   get_pids
+  local process
   for pid in ${B2G_PIDS[*]}; do
     # adb shell seems to replace the \n with a \r, so we use
     # tr to strip trailing newlines or CRs
-    B2G_COMMS[${pid}]="$(${ADB} shell cat /proc/${pid}/comm | tr -d '\r\n')"
+    process="$(${ADB} shell cat /proc/${pid}/comm | tr -d '\r\n')"
+    B2G_COMMS[${pid}]=${process//[^A-Za-z0-9]/}
   done
 }
 
