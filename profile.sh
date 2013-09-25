@@ -99,12 +99,10 @@ get_comms() {
     return
   fi
   get_pids
-  local process
   for pid in ${B2G_PIDS[*]}; do
     # adb shell seems to replace the \n with a \r, so we use
     # tr to strip trailing newlines or CRs
-    process="$(${ADB} shell cat /proc/${pid}/comm | tr -d '\r\n')"
-    B2G_COMMS[${pid}]=${process//[^A-Za-z0-9]/}
+    B2G_COMMS[${pid}]="$(${ADB} shell cat /proc/${pid}/comm | tr -d '\r\n')"
   done
 }
 
@@ -297,12 +295,15 @@ cmd_pull() {
   local profile_filename
   local profile_pattern="${PROFILE_DIR}/profile_?_${pid}.txt"
   local local_filename
+  # Remove all non-alphanumeric characters from the process name to
+  # make filename-handling sane.
+  local alphanum_process_name=${B2G_COMMS[${pid}]//[^A-Za-z0-9]/}
   if [ -z "${comm}" ]; then
     local_filename="profile_${pid}.txt"
   elif [ -z "${label}" ]; then
-    local_filename="profile_${pid}_${B2G_COMMS[${pid}]}.txt"
+    local_filename="profile_${pid}_${alphanum_process_name}.txt"
   else
-    local_filename="profile_${label}_${pid}_${B2G_COMMS[${pid}]}.txt"
+    local_filename="profile_${label}_${pid}_${alphanum_process_name}.txt"
   fi
   profile_filename=$(${ADB} shell "echo -n ${profile_pattern}")
   
