@@ -165,7 +165,7 @@ cmd_capture() {
     for pid in ${B2G_PIDS[*]}; do (
       PREFIX="     ${pid}"
       PREFIX="${PREFIX:$((${#PREFIX} - 5)):5}: "
-      echo "${PREFIX}Stabilizing ${B2G_COMMS[${pid}]} ..." 1>&2
+      echo -n "${PREFIX}Stabilizing ${B2G_COMMS[${pid}]} ..." 1>&2
       stabilized=$(cmd_stabilize ${pid})
       if [ "${stabilized}" == "0" ]; then
         echo "${PREFIX}Process was probably killed due to OOM" 1>&2
@@ -191,7 +191,7 @@ cmd_capture() {
     profiles_count=0
     profiles_to_merge=""
     for pid in $pids; do
-      echo "Stabilizing ${pid} ${B2G_COMMS[${pid}]} ..." 1>&2
+      echo -n "Stabilizing ${pid} ${B2G_COMMS[${pid}]} ..." 1>&2
       stabilized=$(cmd_stabilize ${pid})
       if [ "${stabilized}" == "0" ]; then
         echo "Process ${pid} was probably killed due to OOM" 1>&2
@@ -408,8 +408,11 @@ cmd_stabilize() {
     if [ "${curr_size}" == "0" ]; then
       # Our file hasn't changed. See if others have
       if [ "${curr_sizes}" == "${prev_sizes}" ]; then
+        echo -n "." 1>&2
         waiting=$(( ${waiting} + 1 ))
-        if [ ${waiting} -gt 5 ]; then
+        # It can take a long time to stabilize logs from
+        # processes with lots of threads...
+        if [ ${waiting} -gt 20 ]; then
           # No file sizes have changed in the last 5 seconds.
           # Assume that our PID was OOM'd
           break
@@ -420,6 +423,7 @@ cmd_stabilize() {
     else
       # Our file has non-zero size
       if [ "${curr_size}" == "${prev_size}" ]; then
+        echo -n "o" 1>&2
         waiting=$(( ${waiting} + 1 ))
         if [ ${waiting} -gt 2 ]; then
           # Our size is non-zero and hasn't changed recently.
@@ -436,6 +440,7 @@ cmd_stabilize() {
     sleep 1
   done
 
+  echo "O" 1>&2
   echo "${stabilized}"
 }
 
